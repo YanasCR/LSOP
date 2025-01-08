@@ -1,0 +1,250 @@
+rand_seed( get_seconds())
+allsize = 8
+buildx = 190 * allsize
+buildy = 100 * allsize
+grids = 10 / allsize
+
+mutcount = 6
+rcount = 10000
+rpos = new(mutcount,rcount,INT)
+bcount = 5
+bpos = new(4,bcount,INT)
+
+rpos = rndrspawn(rcount, rpos, buildx, buildy)
+
+bpos = rndbspawn(bcount, bpos, buildx, buildy)
+
+rndarr = new(2, 1, INT)
+fnarr = new(2, 1, INT)
+
+while(wh < wh + 1){
+    clear(WHITE)
+
+    score(rcount, rpos)
+
+    rpos = move(rcount, bcount, rpos, bpos,buildx, buildy, mutcount, rcount)
+
+    
+    rpos = newbro(bpos, rpos, bcount, rcount, buildx, buildy, mutcount)
+    bpos = respawn(bpos, rpos, bcount, rcount, buildx, buildy)
+
+    drawbox(bcount, bpos, grids, buildx, buildy)
+    drawbox(rcount, rpos, grids, buildx, buildy)
+
+    frame()
+}
+fn score($count, $rarr){
+    $a = 0
+    $b = 0
+    $c = 0
+    $d = 0
+    for ($i = 0; $i < $count; $i+1){
+        if ($rarr[3, $i] > 1){
+            $a + $rarr[3, $i]
+            $b + 1
+        }
+        if ($rarr[5, $i] >= 0){
+            $c + $rarr[5, $i]
+            $d + 1
+        }
+    }
+    $num = $a / $b
+    $str = ""
+    num_to_str( $str, $num)
+    print($str, -100, 0, BLACK)
+    $num = $c / $d
+    $str = ""
+    num_to_str( $str, $num)
+    print($str, 100, 0, BLACK)
+    $str = ""
+    num_to_str( $str, $d)
+    print($str, 0, 50, BLACK)
+}
+fn move($huntercount, $targetcount, $hunterpos, $targetpos, $axisx, $axisy, $hunterx, $huntery) {
+    for ($i = 0; $i < $huntercount; $i + 1) {
+        if ($hunterpos[0, $i] > -1000000) {
+            $target = distchekc($targetpos, $targetcount, $hunterpos[0, $i], $hunterpos[1, $i], $hunterpos[2, $i])
+            if ($target > -1){
+                $narr = find($hunterpos[0, $i], $hunterpos[1, $i], $targetpos[0, $target], $targetpos[1, $target], $hunterpos[5, $i])
+                if ($narr != 0) {
+                    $hunterpos[0, $i] + $narr[0, 0]
+                    $hunterpos[1, $i] + $narr[1, 0]
+                }
+            }
+
+            else {
+                $rarr = rndmove($hunterpos[0, $i], $hunterpos[1, $i], $axisx, $axisy, $hunterpos[5, $i])
+                $hunterpos[0, $i] + $rarr[0, 0]
+                $hunterpos[1, $i] + $rarr[1, 0]
+            }
+
+            $hunterpos[4, $i] - 1
+            
+            if ($hunterpos[4, $i] <= 2){
+                $hunterpos[0, $i] = -1000000000
+                $hunterpos[1, $i] = -10000
+                $hunterpos[2, $i] = None
+                $hunterpos[3, $i] = None
+                $hunterpos[4, $i] = None
+                $hunterpos[5, $i] = -5
+            }
+        }
+    }
+    ret($hunterpos)
+}
+fn respawn($mepos, $hunterpos, $mecount, $huntercount, $axisx, $axisy) {
+    for ($i = 0; $i < $mecount; $i+1) {
+        for ($j = 0; $j < $huntercount; $j+1) {
+            if($mepos[0,$i] == $hunterpos[0,$j] && $mepos[1,$i] == $hunterpos[1,$j]){
+                $hunterpos[4, $j] + 1000
+                $mepos[0,$i] = rand() % ($axisx - 1)
+                $mepos[1,$i] = rand() % ($axisy - 1)
+            }
+        }
+    }
+    ret($mepos)
+}
+fn newbro($mepos, $hunterpos, $mecount, $huntercount, $axisx, $axisy, $widtharr) {
+    for ($i = 0; $i < $mecount; $i+1) {
+        for ($j = 0; $j < $huntercount; $j+1) {
+            if($mepos[0,$i] == $hunterpos[0,$j] && $mepos[1,$i] == $hunterpos[1,$j]){
+                rcount + 1
+                resize($hunterpos, $widtharr, rcount)
+                $genmut = ((rand() % 2) + 1)
+                $hunterpos[0, rcount - 1] = $hunterpos[0, $j]
+                $hunterpos[1, rcount - 1] = $hunterpos[1, $j]
+                if ($genmut == 1) {
+                    $hunterpos[2, rcount - 1] = $hunterpos[2, $j] + ((rand() % 21) - 10)
+                }
+                else {
+                    $hunterpos[2, rcount - 1] = $hunterpos[2, $j]
+                }
+                $hunterpos[3, rcount - 1] = get_color($hunterpos[2, rcount - 1], 0, 0)
+                $hunterpos[4, rcount - 1] = 3000
+                if ($genmut == 2) {
+                    $hunterpos[5, rcount - 1] = 3 + ((rand() % 3) - 1)
+                }
+                else {
+                    $hunterpos[5, rcount - 1] = 3
+                }
+            }
+        }
+    }
+    ret($hunterpos)
+}
+fn rndbspawn($count, $pos, $axisx, $axisy) {
+    for ($s = 0; $s < $count; $s + 1)
+    {
+        $pos[0,$s] = rand() % ($axisx - 1)
+        $pos[1,$s] = rand() % ($axisy - 1)
+        $pos[2,$s] = GREEN
+        $pos[3,$s] = GREEN
+    }
+
+    ret($pos)
+}
+fn rndrspawn($count, $pos, $axisx, $axisy) {
+    for ($s = 0; $s < $count; $s + 1)
+    {
+        $rnd = ((rand() % 3) - 1) * 10
+        $pos[0,$s] = rand() % ($axisx - 1)
+        $pos[1,$s] = rand() % ($axisy - 1)
+        $pos[2,$s] = 20 + $rnd
+        $pos[3,$s] = get_color($pos[2, $s], 0, 0)
+        $pos[4,$s] = 3000
+        $pos[5,$s] = 1
+        $rnd = 0
+    }
+
+    ret($pos)
+}
+fn build($size, $axisx, $axisy, $color) {
+    for ($i = 0; $i < $axisx; $i + 1) {
+        for ($j = 0; $j < $axisy; $j+1) {
+            $posx = posmath($i, $size, $axisx)
+            $posy = posmath($j, $size, $axisy)
+
+            fbox($posx, $posy, $size, $size, $color)
+            box($posx, $posy, $size, $size, BLACK)
+        }
+    }
+}
+fn drawbox($count, $pos, $size, $axisx, $axisy) {
+    for ($i = 0; $i < $count; $i+1) {
+        $posx = posmath($pos[0, $i], $size, $axisx)
+        $posy = posmath($pos[1, $i], $size, $axisy)
+
+        fbox($posx, $posy, $size, $size, $pos[3, $i])
+        box($posx, $posy, $size, $size, BLACK)
+    }
+}
+fn rndmove($posx, $posy, $axisx, $axisy, $speed) {
+    $sidex = (rand() % ($speed * 2 + 1)) - $speed
+    $sidey = (rand() % ($speed * 2 + 1)) - $speed
+
+    if ($posx + $sidex >= 0 && $posx + $sidex <= $axisx - 1){
+        rndarr[0, 0] = $sidex
+    }
+    else {
+        rndarr[0, 0] = 0
+    }
+    if ($posy + $sidey >= 0 && $posy + $sidey <= $axisy - 1){
+        rndarr[1, 0] = $sidey
+    }
+    else {
+        rndarr[1, 0] = 0
+    }
+
+    ret(rndarr)
+}
+fn distchekc($targetpos, $targetcount, $meposx, $meposy, $finddist) {
+    $mindist = 200000
+    $mindisttarget = -1
+
+    for ($i = 0; $i < $targetcount; $i+1) {
+        $xx = $meposx - $targetpos[0, $i]
+        $xx = $xx * $xx
+        $yy = $meposy - $targetpos[1, $i]
+        $yy = $yy * $yy
+
+        $dist = sqrt($xx + $yy)
+
+        if ($dist < $finddist && $dist < $mindist) {
+            $mindist = $dist
+            $mindisttarget = $i
+        }
+    }
+
+    ret($mindisttarget)
+}
+fn find($meposx, $meposy, $targetposx, $targetposy, $speed) {
+    if ($targetposx < $meposx) {
+        $movex = -$speed + (rand() % $speed)
+    }
+    if ($targetposx > $meposx) {
+        $movex = $speed + ((rand() % ($speed + 1)) - $speed)
+    }
+    if ($targetposx == $meposx) {
+        $movex = (rand() % ($speed * 2 + 1)) - $speed
+    }
+
+    if ($targetposy < $meposy) {
+        $movey = -$speed + (rand() % $speed)
+    }
+    if ($targetposy > $meposy) {
+        $movey = $speed + ((rand() % ($speed + 1)) - $speed)
+    }
+    if ($targetposy == $meposy) {
+        $movey = (rand() % ($speed * 2 + 1)) - $speed
+    }
+
+    fnarr[0, 0] = $movex
+    fnarr[1, 0] = $movey
+
+    ret(fnarr)
+}
+fn posmath($pos,$size,$axis) {
+    ret(($pos*$size)-($axis*($size/2)))
+}
+
+frame(1000 * 1000)
